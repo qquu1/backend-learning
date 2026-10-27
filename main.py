@@ -1,0 +1,85 @@
+import json
+
+#task 1
+def read_file(path: str) -> str:
+    try:
+        with open(path, "r") as file:
+            return file.read()
+    except FileNotFoundError:
+        return ""
+
+#task 2
+# user = {
+#     "name" : "Alex",
+#     "age" : 12,
+#     "visits" : 0
+# }
+
+# try:
+#     with open("data.json", "w") as file:
+#         json.dump(user, file, indent=4)
+# except (FileNotFoundError):
+#     print("Error")
+
+#task 3
+
+def safe_divide(a, b) -> float | None:
+    try:
+        return (a / b)
+    except (ZeroDivisionError, TypeError):
+        return None
+
+
+
+
+
+#task 4
+
+default_user = {
+    "name" : "Egor",
+    "visits" : 0
+}
+
+def Smart():
+    try:
+        with open("data.json", "r") as file:
+            data = json.load(file)
+
+    except (FileNotFoundError, json.JSONDecodeError):
+        data = default_user.copy()
+
+
+    visits = data.get("visits", 0)
+    if not isinstance(visits, int):   
+        visits = 0
+    data["visits"] = visits + 1
+    save_data(data, "data.json")
+
+    print(data)
+
+    
+
+
+
+
+def save_data(data, path):
+    with open(path, "w") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+
+#Task 5
+def count_words(text: str) -> dict:
+    word_counts = {}
+    words = text.lower().split()
+
+
+    for word in words:
+        cleaned_word = word.strip(".,!?;:")
+        if cleaned_word:
+            word_counts[cleaned_word] = word_counts.get(cleaned_word, 0) + 1
+
+    return word_counts
+
+
+Smart()
+    
