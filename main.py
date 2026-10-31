@@ -89,6 +89,7 @@
 
 
 from fastapi import FastAPI
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -97,6 +98,9 @@ BOOKS = [
     {"id": 2, "title": "Мастер и Маргарита", "author": "Михаил Булгаков"},
     {"id": 3, "title": "Преступление и наказание", "author": "Фёдор Достоевский"},
 ]
+
+
+
 
 @app.get("/")
 def read_root():
@@ -109,3 +113,41 @@ def books():
 @app.get("/about")
 def about():
     return {"message": "Книга о великом"}
+
+#DAY 4
+
+
+@app.get("/books/{book_id}")
+def get_book(book_id: int):
+    for book in BOOKS:
+        if book["id"] == book_id:
+            return book
+    
+    return {"error" : "Книга не найдена"}
+
+
+@app.get("/search")
+def search_books(author: str):
+    newbooks = []
+    for book in BOOKS:
+        if book["author"] == author:
+            newbooks.append(book)
+    return newbooks
+
+# DAY 5
+class BookCreate(BaseModel):
+    title: str
+    author: str
+
+@app.post("/books")
+def create_book(book: BookCreate):
+    if not BOOKS:
+        new_id = 1
+    else:
+        new_id = max([b["id"] for b in BOOKS]) + 1
+    new_book = {"id": new_id, "title": book.title, "author": book.author}
+    BOOKS.append(new_book)
+    return new_book
+
+
+
