@@ -122,7 +122,6 @@ def get_book(book_id: int):
     for book in BOOKS:
         if book["id"] == book_id:
             return book
-    
     return {"error" : "Книга не найдена"}
 
 
@@ -149,5 +148,26 @@ def create_book(book: BookCreate):
     BOOKS.append(new_book)
     return new_book
 
+#DAY 6
 
+@app.delete("/books/{book_id}")
+def delete_book(book_id: int):
+    for book in BOOKS:
+        if book["id"] == book_id:
+            BOOKS.remove(book)
+            return {"message" : "книга удалена"}
+    return {"error" : "книга не найдена"}
+
+
+@app.put("/books/{book_id}")
+def update_book(book_id: int, updated_book: BookCreate):
+    for book in BOOKS:
+            if book["id"] == book_id:
+                book["title"] = updated_book.title
+                book["author"] = updated_book.author
+                return book
+    return {"error" : "книга не найдена"}
+
+
+        
 
