@@ -86,10 +86,14 @@
 
 
 #DAY 3
-
-
+import models
+from database import engine
 from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
