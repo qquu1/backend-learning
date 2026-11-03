@@ -86,24 +86,22 @@
 
 
 #DAY 3
-import models
-from database import engine
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel
-from fastapi import FastAPI
-from pydantic import BaseModel
+from sqlalchemy.orm import Session
+import models, crud
+from database import engine, SessionLocal
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-BOOKS = [
-    {"id": 1, "title": "1984", "author": "Джордж Оруэлл"},
-    {"id": 2, "title": "Мастер и Маргарита", "author": "Михаил Булгаков"},
-    {"id": 3, "title": "Преступление и наказание", "author": "Фёдор Достоевский"},
-]
-
-
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @app.get("/")
@@ -111,8 +109,8 @@ def read_root():
     return {"message": "Привет, это мой первый API!"}
 
 @app.get("/books")
-def books():
-    return BOOKS
+def books(db: Session = Depends(get_db)):
+    return crud.get_books(db)
 
 @app.get("/about")
 def about():
@@ -122,20 +120,12 @@ def about():
 
 
 @app.get("/books/{book_id}")
-def get_book(book_id: int):
-    for book in BOOKS:
-        if book["id"] == book_id:
-            return book
-    return {"error" : "Книга не найдена"}
+def get_book(book_id: int,db: Session = Depends(get_db)):
+    book = crud.get_book(db, book_id)
+    if not book:
+        return {"error": "Книга не найдена"}
+    return book
 
-
-@app.get("/search")
-def search_books(author: str):
-    newbooks = []
-    for book in BOOKS:
-        if book["author"] == author:
-            newbooks.append(book)
-    return newbooks
 
 # DAY 5
 class BookCreate(BaseModel):
@@ -143,34 +133,27 @@ class BookCreate(BaseModel):
     author: str
 
 @app.post("/books")
-def create_book(book: BookCreate):
-    if not BOOKS:
-        new_id = 1
-    else:
-        new_id = max([b["id"] for b in BOOKS]) + 1
-    new_book = {"id": new_id, "title": book.title, "author": book.author}
-    BOOKS.append(new_book)
-    return new_book
+def create_book(book: BookCreate, db: Session = Depends(get_db)):
+    return crud.create_book(db, title = book.title, author=book.author)
 
 #DAY 6
 
 @app.delete("/books/{book_id}")
-def delete_book(book_id: int):
-    for book in BOOKS:
-        if book["id"] == book_id:
-            BOOKS.remove(book)
-            return {"message" : "книга удалена"}
-    return {"error" : "книга не найдена"}
+def delete_book(book_id: int, db: Session = Depends(get_db)):
+    book = crud.delete_book(db, book_id)
+    if not book:
+        return {"error": "Книга не найдена"}
+    return {"message": "Книга удалена"}
 
 
 @app.put("/books/{book_id}")
-def update_book(book_id: int, updated_book: BookCreate):
-    for book in BOOKS:
-            if book["id"] == book_id:
-                book["title"] = updated_book.title
-                book["author"] = updated_book.author
-                return book
-    return {"error" : "книга не найдена"}
+def update_book(updated_book: BookCreate, book_id: int, db: Session = Depends(get_db)):
+    book = crud.update_book(db, book_id=book_id, title=updated_book.title, author=updated_book.author)
+    if not book:
+        return {"error": "Книга не найдена"}
+    return book
+
+
 
 
         
