@@ -91,6 +91,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 import models, crud
 from database import engine, SessionLocal
+import crud_sql
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -110,7 +111,7 @@ def read_root():
 
 @app.get("/books")
 def books(db: Session = Depends(get_db)):
-    return crud.get_books(db)
+    return crud_sql.get_books_sql(db)
 
 @app.get("/about")
 def about():
@@ -121,7 +122,7 @@ def about():
 
 @app.get("/books/{book_id}")
 def get_book(book_id: int,db: Session = Depends(get_db)):
-    book = crud.get_book(db, book_id)
+    book = crud_sql.get_book_sql(db, book_id)
     if not book:
         return {"error": "Книга не найдена"}
     return book
@@ -134,13 +135,13 @@ class BookCreate(BaseModel):
 
 @app.post("/books")
 def create_book(book: BookCreate, db: Session = Depends(get_db)):
-    return crud.create_book(db, title = book.title, author=book.author)
+    return crud_sql.create_book_sql(db, title = book.title, author=book.author)
 
 #DAY 6
 
 @app.delete("/books/{book_id}")
 def delete_book(book_id: int, db: Session = Depends(get_db)):
-    book = crud.delete_book(db, book_id)
+    book = crud_sql.delete_book_sql(db, book_id)
     if not book:
         return {"error": "Книга не найдена"}
     return {"message": "Книга удалена"}
@@ -148,7 +149,7 @@ def delete_book(book_id: int, db: Session = Depends(get_db)):
 
 @app.put("/books/{book_id}")
 def update_book(updated_book: BookCreate, book_id: int, db: Session = Depends(get_db)):
-    book = crud.update_book(db, book_id=book_id, title=updated_book.title, author=updated_book.author)
+    book = crud_sql.update_book_sql(db, book_id=book_id, title=updated_book.title, author=updated_book.author)
     if not book:
         return {"error": "Книга не найдена"}
     return book
