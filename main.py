@@ -92,6 +92,7 @@ from sqlalchemy.orm import Session
 import models, crud
 from database import engine, SessionLocal
 import crud_sql
+from fastapi import FastAPI, Depends, HTTPException
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -124,18 +125,18 @@ def about():
 def get_book(book_id: int,db: Session = Depends(get_db)):
     book = crud_sql.get_book_sql(db, book_id)
     if not book:
-        return {"error": "Книга не найдена"}
+        raise HTTPException(status_code=404, detail="Книга не найдена")
     return book
 
 
 # DAY 5
 class BookCreate(BaseModel):
     title: str
-    author: str
+    author_id: int
 
 @app.post("/books")
 def create_book(book: BookCreate, db: Session = Depends(get_db)):
-    return crud_sql.create_book_sql(db, title = book.title, author=book.author)
+    return crud_sql.create_book_sql(db, title = book.title, author_id=book.author_id)
 
 #DAY 6
 
@@ -149,13 +150,35 @@ def delete_book(book_id: int, db: Session = Depends(get_db)):
 
 @app.put("/books/{book_id}")
 def update_book(updated_book: BookCreate, book_id: int, db: Session = Depends(get_db)):
-    book = crud_sql.update_book_sql(db, book_id=book_id, title=updated_book.title, author=updated_book.author)
+    book = crud_sql.update_book_sql(db, book_id=book_id, title=updated_book.title, author_id=updated_book.author_id)
     if not book:
         return {"error": "Книга не найдена"}
     return book
 
+class AuthorCreate(BaseModel):
+    name: str
+
+@app.post("/authors")
+def create_author(author: AuthorCreate, db: Session = Depends(get_db)):
+    return crud_sql.create_author_sql(db, name=author.name)
 
 
+import asyncio
 
+@app.get("/async-test")
+async def async_test():
+
+    await asyncio.sleep(10) 
+    return {"message": "Прошло 10 секунд, но сервер не завис!"}
+
+
+import time
+
+import time
+
+@app.get("/sync-test")
+async def sync_test():  # <-- Обрати внимание: async def!
+    time.sleep(10)       # <-- Синхронный сон внутри асинхронной функции
+    return {"message": "Прошло 3 секунды"}
         
 

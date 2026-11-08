@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
 from database import Base
 
 class Book(Base):
@@ -6,4 +7,14 @@ class Book(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
-    author = Column(String, index=True)
+    author_id = Column(Integer, ForeignKey("authors.id"))
+    year = Column(Integer, nullable=True)
+    author = relationship("Author") #чтобы можно было обращаться
+
+
+class Author(Base):
+    __tablename__ = "authors"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+
