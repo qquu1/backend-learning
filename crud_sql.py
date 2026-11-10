@@ -17,13 +17,34 @@ def get_books_sql(db: Session):
 
 
 
-def get_book_sql(db: Session, book_id: int):
-    result = db.execute(text("SELECT books.id, books.title, authors.name AS author_name FROM books JOIN authors ON books.author_id = authors.id WHERE books.id = :book_id"),{"book_id": book_id})
-    row = result.fetchone()
+def get_books_sql(db: Session, skip: int = 0, limit: int = 10, author: str = None):
     
-    if row:
-        return {"id": row[0], "title": row[1], "author": row[2]}
-    return None
+    query = """
+        SELECT books.id, books.title, authors.name AS author_name 
+        FROM books 
+        JOIN authors ON books.author_id = authors.id
+    """
+    
+    
+    params = {"limit": limit, "skip": skip}
+    
+    
+    if author:
+        query += " WHERE authors.name = :author"
+        params["author"] = author
+        
+    
+    query += " LIMIT :limit OFFSET :skip"
+    
+
+    result = db.execute(text(query), params)
+    rows = result.fetchall()
+    
+
+    books = []
+    for row in rows:
+        books.append({"id": row[0], "title": row[1], "author": row[2]})
+    return books
 
 def create_book_sql(db: Session, title: str, author_id: int):
     

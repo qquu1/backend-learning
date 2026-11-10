@@ -111,8 +111,13 @@ def read_root():
     return {"message": "Привет, это мой первый API!"}
 
 @app.get("/books")
-def books(db: Session = Depends(get_db)):
-    return crud_sql.get_books_sql(db)
+def books(
+    skip: int = 0, 
+    limit: int = 10, 
+    author: str = None, 
+    db: Session = Depends(get_db)
+):
+    return crud_sql.get_books_sql(db, skip=skip, limit=limit, author=author)
 
 @app.get("/about")
 def about():
