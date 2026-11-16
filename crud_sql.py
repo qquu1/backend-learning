@@ -1,20 +1,16 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from auth import get_password_hash
 
-def get_books_sql(db: Session):
-   
-    result = db.execute(text("SELECT books.id, books.title, authors.name AS author_name FROM books JOIN authors ON books.author_id = authors.id"))
-    
-    # result.fetchall() возвращает список кортежей (например, [(1, '1984', 'Оруэлл')])
-    rows = result.fetchall()
-    
-    # Превращаем кортежи в словари, чтобы FastAPI мог отдать их как JSON
-    books = []
-    for row in rows:
-        books.append({"id": row[0], "title": row[1], "author": row[2]})
-    return books
-
-
+def get_book_sql(db: Session, book_id: int):
+    result = db.execute(
+        text("SELECT books.id, books.title, authors.name AS author_name FROM books JOIN authors ON books.author_id = authors.id WHERE books.id = :book_id"),
+        {"book_id": book_id}
+    )
+    row = result.fetchone()
+    if row:
+        return {"id": row[0], "title": row[1], "author": row[2]}
+    return None
 
 
 def get_books_sql(db: Session, skip: int = 0, limit: int = 10, author: str = None):
@@ -91,6 +87,29 @@ def create_author_sql(db: Session, name: str):
     new_id = result.fetchone()[0]
     db.commit()
     return {"id": new_id, "name": name}
+
+def create_user_sql(db: Session, username: str, password: str):
+    hashed_password = get_password_hash(password)
+    result = db.execute(
+            text("INSERT INTO users (username, hashed_password) VALUES (:username, :hashed_password) RETURNING id"),
+            {"username": username, "hashed_password": hashed_password}
+        )
+    new_id = result.fetchone()[0]
+        
+    db.commit()
+        
+    return {"id": new_id, "username": username}
+
+def get_user_by_username_sql(db: Session, username:str):
+    result = db.execute(
+                text("SELECT id, username, hashed_password FROM users WHERE username = :username"),
+                {"username": username}
+            )
+
+    row = result.fetchone()
+    if row:
+        return {"id": row[0], "username": row[1], "hashed_password": row[2]}
+    return None
 
 
 
